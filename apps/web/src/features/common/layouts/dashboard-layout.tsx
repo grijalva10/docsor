@@ -1,0 +1,59 @@
+'use client'
+
+import * as React from 'react'
+
+import { Container } from '@chakra-ui/react'
+import { Auth } from '@saas-ui/auth'
+import { usePathname, Link } from '@app/nextjs'
+import { BillingProvider } from '@saas-ui-pro/billing'
+
+import { authType, authProviders, authPaths } from '@app/config'
+import { Logo, AppLoader } from '@ui/lib'
+
+import { AuthLayout } from './auth-layout'
+import { useInitApp } from '../hooks/use-init-app'
+
+/**
+ * Wrapper component for dashboard pages.
+ *
+ * Loads the minimal required user data for the app and
+ * renders authentication screens when the user isn't authenticated.
+ */
+export const DashboardLayout: React.FC<{ children: React.ReactNode }> = (
+  props,
+) => {
+  const pathname = usePathname()
+
+  const { isInitializing, isAuthenticated, billing } = useInitApp()
+
+  const { view, title } = authPaths[pathname || '/login'] || authPaths['/login']
+
+  // Rendering the auth screens here so they are rendered in place,
+  // on the current route, without the need to redirect.
+  if (!isInitializing && !isAuthenticated) {
+    return (
+      <AuthLayout>
+        <Container>
+          <Logo margin="0 auto" mb="12" />
+          <Auth
+            title={title}
+            providers={authProviders}
+            view={view}
+            type={authType}
+            signupLink={<Link href="/signup">Sign up</Link>}
+            loginLink={<Link href="/login">Log in</Link>}
+            forgotLink={<Link href="/forgot_password">Forgot password?</Link>}
+            backLink={<Link href="/login">Back to log in</Link>}
+          />
+        </Container>
+      </AuthLayout>
+    )
+  }
+
+  return (
+    <BillingProvider value={billing}>
+      <AppLoader isLoading={isInitializing} />
+      {!isInitializing && props.children}
+    </BillingProvider>
+  )
+}
